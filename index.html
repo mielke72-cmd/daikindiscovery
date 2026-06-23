@@ -1,0 +1,1249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Daikin MEA — Discovery Call Capture</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --line-strong: #cbd5e1;
+    --accent: #2563eb;
+    --accent-soft: #dbeafe;
+    --b2b: #0e7490;
+    --b2b-soft: #cffafe;
+    --b2c: #9333ea;
+    --b2c-soft: #f3e8ff;
+    --high: #b91c1c;
+    --high-soft: #fee2e2;
+    --med: #b45309;
+    --med-soft: #fef3c7;
+    --low: #047857;
+    --low-soft: #d1fae5;
+    --it: #475569;
+    --cmo: #0d9488;
+    --cxo: #c2410c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  a { color: var(--accent); }
+  header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #fff;
+    padding: 22px 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  header h1 { margin: 0 0 4px; font-size: 22px; font-weight: 650; }
+  header .sub { color: #94a3b8; font-size: 13px; }
+  .layout { max-width: 1100px; margin: 0 auto; padding: 18px 22px 80px; }
+
+  .toolbar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+    padding: 12px 0;
+    margin: 0 0 14px;
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .toolbar .grow { flex: 1; min-width: 180px; }
+  .toolbar input[type="search"],
+  .toolbar input[type="text"] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: #fff;
+    font: inherit;
+  }
+  .toolbar select {
+    padding: 8px 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: #fff;
+    font: inherit;
+  }
+  .btn {
+    padding: 8px 12px;
+    border: 1px solid var(--line-strong);
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font: inherit;
+    color: var(--ink);
+  }
+  .btn:hover { background: #f1f5f9; }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.primary:hover { background: #1d4ed8; }
+  .btn.danger { color: var(--high); }
+  .btn.danger:hover { background: var(--high-soft); }
+
+  .progress {
+    font-size: 13px; color: var(--muted);
+    background: #fff; border: 1px solid var(--line);
+    padding: 7px 12px; border-radius: 6px;
+  }
+  .progress b { color: var(--ink); }
+
+  .meta-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;
+    background: #fff; border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px 14px; margin-bottom: 18px;
+  }
+  .meta-grid label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .meta-grid input { width: 100%; padding: 6px 8px; border: 1px solid var(--line-strong); border-radius: 5px; font: inherit; }
+
+  .role-section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .role-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 10px;
+    background: #fbfcfd;
+  }
+  .role-head .pill {
+    font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 999px; color: #fff;
+  }
+  .role-head h2 { margin: 0; font-size: 17px; font-weight: 650; }
+  .role-head .goal { color: var(--muted); font-size: 13px; }
+  .role-cmo .pill { background: var(--cmo); }
+  .role-cxo .pill { background: var(--cxo); }
+  .role-it  .pill { background: var(--it); }
+  .role-all .pill { background: #1e293b; }
+
+  .q {
+    border-top: 1px solid var(--line);
+    padding: 14px 18px;
+  }
+  .q:first-of-type { border-top: 0; }
+  .q.hidden { display: none; }
+  .q.flagged { background: #fffbeb; }
+  .q-head {
+    display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap;
+  }
+  .q-tag {
+    font-size: 11px; font-weight: 700; color: var(--muted);
+    padding: 3px 7px; border: 1px solid var(--line-strong); border-radius: 5px;
+    background: #fff; white-space: nowrap;
+  }
+  .q-title { font-weight: 600; font-size: 15px; flex: 1; min-width: 220px; }
+  .q-quote {
+    margin: 8px 0 6px;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-left: 3px solid var(--accent);
+    font-style: italic;
+    color: #334155;
+    font-size: 14px;
+    border-radius: 0 4px 4px 0;
+  }
+  .q-why {
+    font-size: 12.5px; color: var(--muted); margin-bottom: 8px;
+  }
+  .q-why b { color: var(--ink); font-weight: 600; }
+  details.branches {
+    margin: 4px 0 10px;
+    font-size: 13px;
+  }
+  details.branches summary {
+    cursor: pointer; color: var(--accent); font-weight: 500; padding: 3px 0;
+  }
+  details.branches ul { margin: 6px 0 0; padding-left: 18px; color: #334155; }
+  details.branches li { margin-bottom: 4px; }
+
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+    margin-top: 8px;
+  }
+  .seg {
+    display: inline-flex; border: 1px solid var(--line-strong); border-radius: 6px; overflow: hidden;
+    background: #fff;
+  }
+  .seg button {
+    border: 0; background: transparent; cursor: pointer;
+    padding: 5px 10px; font: inherit; font-size: 12.5px; color: var(--muted);
+    border-right: 1px solid var(--line);
+  }
+  .seg button:last-child { border-right: 0; }
+  .seg button.on {
+    color: #fff;
+  }
+  .seg.tag button[data-val="B2B"].on { background: var(--b2b); }
+  .seg.tag button[data-val="B2C"].on { background: var(--b2c); }
+  .seg.tag button[data-val="Both"].on { background: #475569; }
+  .seg.prio button[data-val="High"].on { background: var(--high); }
+  .seg.prio button[data-val="Med"].on  { background: var(--med); }
+  .seg.prio button[data-val="Low"].on  { background: var(--low); }
+
+  .control-label { font-size: 12px; color: var(--muted); margin-right: 4px; }
+
+  .flag-row { display: inline-flex; gap: 14px; font-size: 13px; color: var(--muted); }
+  .flag-row label { cursor: pointer; user-select: none; display: inline-flex; gap: 5px; align-items: center; }
+
+  textarea.notes {
+    margin-top: 10px;
+    width: 100%;
+    min-height: 70px;
+    padding: 10px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    font: inherit;
+    resize: vertical;
+    background: #fff;
+  }
+  textarea.notes:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+
+  .saved-indicator {
+    font-size: 12px; color: var(--low); margin-left: 6px;
+    opacity: 0; transition: opacity .15s;
+  }
+  .saved-indicator.show { opacity: 1; }
+
+  .summary-bar {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 14px;
+  }
+  .chip {
+    background: #fff; border: 1px solid var(--line); padding: 6px 10px;
+    border-radius: 999px; font-size: 12.5px; color: var(--muted);
+  }
+  .chip b { color: var(--ink); }
+
+  /* Modal */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(15,23,42,.55);
+    display: none; align-items: center; justify-content: center; z-index: 50;
+    padding: 20px;
+  }
+  .modal-bg.on { display: flex; }
+  .modal {
+    background: #fff; border-radius: 10px; max-width: 720px; width: 100%;
+    max-height: 85vh; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .modal header { background: #fff; color: var(--ink); padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+  .modal header h3 { margin: 0; font-size: 16px; }
+  .modal main { padding: 14px 18px; overflow: auto; }
+  .modal pre {
+    background: #f1f5f9; padding: 14px; border-radius: 6px;
+    font-size: 12.5px; white-space: pre-wrap; word-break: break-word;
+    max-height: 60vh; overflow: auto;
+    border: 1px solid var(--line);
+  }
+  .modal footer {
+    padding: 12px 18px; border-top: 1px solid var(--line);
+    display: flex; gap: 8px; justify-content: flex-end;
+  }
+
+  @media (max-width: 640px) {
+    header { padding: 16px 18px; }
+    .layout { padding: 12px 14px 80px; }
+    .role-head, .q { padding: 12px 14px; }
+    .controls { gap: 8px; }
+  }
+  /* ---------- Quick Capture ---------- */
+  .quick {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+  }
+  .quick h3 {
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 650;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .quick h3 .badge {
+    font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 999px; color: #fff; background: var(--accent);
+  }
+  .quick .hint { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
+  .quick input.quick-title {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    font: inherit;
+    margin-bottom: 8px;
+  }
+  .quick textarea.quick-body {
+    width: 100%;
+    min-height: 70px;
+    padding: 10px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    font: inherit;
+    resize: vertical;
+  }
+  .quick textarea.quick-body:focus,
+  .quick input.quick-title:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  .quick .row {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    margin-top: 10px;
+  }
+  .quick .row .save { margin-left: auto; }
+
+  .qn-list { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .qn-list:empty { display: none; }
+  .qn {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #fbfcfd;
+  }
+  .qn.flagged { background: #fffbeb; }
+  .qn-head {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    font-size: 12px; color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .qn-head .qn-title { color: var(--ink); font-weight: 600; font-size: 13.5px; margin-right: auto; }
+  .qn-head .qn-time { font-size: 11.5px; }
+  .qn-body { white-space: pre-wrap; font-size: 13.5px; color: var(--ink); }
+  .qn-tags { display: inline-flex; gap: 4px; }
+  .qn-tags .pb {
+    font-size: 10.5px; font-weight: 600;
+    padding: 1px 6px; border-radius: 4px;
+    border: 1px solid var(--line-strong); color: var(--muted);
+    background: #fff;
+  }
+  .qn-tags .pb-b2b { color: var(--b2b); border-color: var(--b2b); }
+  .qn-tags .pb-b2c { color: var(--b2c); border-color: var(--b2c); }
+  .qn-tags .pb-both { color: #475569; border-color: #475569; }
+  .qn-tags .pb-high { color: var(--high); border-color: var(--high); }
+  .qn-tags .pb-med  { color: var(--med); border-color: var(--med); }
+  .qn-tags .pb-low  { color: var(--low); border-color: var(--low); }
+  .qn-tags .pb-flag { color: var(--high); border-color: var(--high); background: var(--high-soft); }
+  .qn-del {
+    border: 0; background: transparent; cursor: pointer;
+    color: var(--muted); font-size: 16px; line-height: 1;
+    padding: 2px 6px; border-radius: 4px;
+  }
+  .qn-del:hover { color: var(--high); background: var(--high-soft); }
+
+  /* ---------- Print / PDF view ---------- */
+  .print-only { display: none; }
+  @media print {
+    @page { margin: 14mm 12mm; size: A4; }
+    html, body { background: #fff !important; color: #000; font-size: 11pt; }
+    header {
+      background: #fff !important; color: #000 !important;
+      border-bottom: 2px solid #000; padding: 0 0 8px;
+    }
+    header h1 { font-size: 18pt; }
+    header .sub { color: #333 !important; font-size: 10pt; }
+
+    .toolbar, .modal-bg, .saved-indicator, .btn { display: none !important; }
+    .layout { padding: 0; max-width: 100%; }
+
+    .print-only { display: block; }
+    .print-meta {
+      margin: 8px 0 14px;
+      font-size: 10.5pt;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 8px;
+    }
+    .print-meta div { margin: 2px 0; }
+    .print-meta b { display: inline-block; min-width: 130px; }
+
+    .meta-grid { display: none !important; }
+    .summary-bar { margin: 0 0 12px; }
+    .summary-bar .chip {
+      border: 1px solid #999; background: #fff !important;
+      color: #000 !important; padding: 3px 8px; font-size: 9pt;
+    }
+
+    .role-section { border: 0; box-shadow: none; margin-bottom: 12px; page-break-inside: auto; }
+    .role-head { background: #fff !important; padding: 6px 0; border-bottom: 1px solid #000; }
+    .role-head .pill {
+      background: #000 !important; color: #fff !important;
+      padding: 2px 6px; font-size: 8pt;
+    }
+    .role-head h2 { font-size: 13pt; }
+    .role-head .goal { color: #555 !important; font-size: 9.5pt; }
+
+    .q {
+      padding: 8px 0;
+      border-top: 1px dotted #bbb;
+      page-break-inside: avoid;
+    }
+    .q.flagged { background: #fff !important; }
+    .q.flagged::before {
+      content: "🚩 FOLLOW UP — ";
+      color: #b91c1c !important;
+      font-weight: 700;
+      font-size: 9.5pt;
+    }
+    .q.hidden { display: none !important; } /* respect filters when printing */
+    .q-tag { background: #fff !important; border: 1px solid #999; color: #000 !important; font-size: 8.5pt; }
+    .q-title { font-size: 11pt; }
+    .q-quote {
+      background: #fff !important;
+      border-left: 2px solid #555;
+      color: #222 !important;
+      font-size: 10pt;
+      padding: 4px 8px;
+      margin: 4px 0;
+    }
+    .q-why { font-size: 9.5pt; color: #444 !important; }
+
+    /* Hide interactive controls; show static badges instead */
+    .controls .seg, .controls .control-label, .controls .flag-row { display: none !important; }
+    details.branches { display: none !important; }
+
+    .print-badges {
+      display: flex !important;
+      flex-wrap: wrap; gap: 6px;
+      margin: 4px 0 4px;
+      font-size: 9pt;
+    }
+    .print-badges .pb {
+      border: 1px solid #555;
+      padding: 1px 6px;
+      border-radius: 3px;
+      color: #000;
+      background: #fff;
+    }
+    .print-badges .pb-empty { color: #999; border-color: #ccc; }
+    .print-badges .pb-b2b { border-color: #0e7490; color: #0e7490; }
+    .print-badges .pb-b2c { border-color: #9333ea; color: #9333ea; }
+    .print-badges .pb-both { border-color: #475569; color: #475569; }
+    .print-badges .pb-high { border-color: #b91c1c; color: #b91c1c; }
+    .print-badges .pb-med  { border-color: #b45309; color: #b45309; }
+    .print-badges .pb-low  { border-color: #047857; color: #047857; }
+
+    /* Quick-capture: hide inputs, keep the saved list with a section header */
+    .quick { border: 0; padding: 0; margin: 0 0 12px; }
+    .quick h3 .badge { background: #000 !important; color: #fff !important; }
+    .quick h3 { font-size: 13pt; border-bottom: 1px solid #000; padding-bottom: 4px; }
+    .quick .hint,
+    .quick .quick-title,
+    .quick .quick-body,
+    .quick .row { display: none !important; }
+    .quick .qn-list { margin-top: 8px; gap: 6px; }
+    .quick .qn-list:empty { display: none !important; }
+    .quick .qn-list:empty + * { display: none; }
+    /* Hide entire quick block when there are no saved notes */
+    .quick:has(.qn-list:empty) { display: none; }
+    .qn { background: #fff !important; border: 1px solid #999; padding: 6px 8px; page-break-inside: avoid; }
+    .qn.flagged { background: #fff !important; }
+    .qn-del { display: none !important; }
+    .qn-head { font-size: 9.5pt; color: #444 !important; }
+    .qn-head .qn-title { color: #000 !important; font-size: 10.5pt; }
+    .qn-body { font-size: 10pt; }
+
+    /* Render notes as a printable block instead of a textarea */
+    textarea.notes { display: none !important; }
+    .print-notes {
+      display: block !important;
+      white-space: pre-wrap;
+      border: 1px solid #ccc;
+      padding: 6px 8px;
+      margin-top: 4px;
+      font-size: 10pt;
+      min-height: 18px;
+      background: #fafafa !important;
+    }
+    .print-notes:empty::before { content: "—"; color: #aaa; }
+  }
+  .print-only.print-meta, .print-badges, .print-notes { /* keep hidden in screen view */ }
+  body:not(.printing) .print-badges,
+  body:not(.printing) .print-notes,
+  body:not(.printing) .print-only { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Daikin MEA — Discovery Call Capture</h1>
+  <div class="sub">Daikin Middle East &amp; Africa FZE · Manufacturing, Automotive &amp; Energy · 400 employees · HQ: UAE</div>
+</header>
+
+<div class="layout">
+
+  <div class="meta-grid">
+    <div>
+      <label for="m-date">Date</label>
+      <input id="m-date" type="date" />
+    </div>
+    <div>
+      <label for="m-attendees">Attendees (Daikin)</label>
+      <input id="m-attendees" type="text" placeholder="Names / roles" />
+    </div>
+    <div>
+      <label for="m-our-team">Our team</label>
+      <input id="m-our-team" type="text" placeholder="Names" />
+    </div>
+    <div>
+      <label for="m-next">Next step / owner</label>
+      <input id="m-next" type="text" placeholder="e.g. send 45-min demo agenda" />
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="grow"><input id="search" type="search" placeholder="Search questions or notes…" /></div>
+    <select id="filter-role" title="Filter by role">
+      <option value="">All roles</option>
+      <option value="All">Group</option>
+      <option value="CMO">CMO / Marketing</option>
+      <option value="CXO">CXO / Service</option>
+      <option value="IT">IT</option>
+    </select>
+    <select id="filter-tag" title="Filter by B2B/B2C tag">
+      <option value="">All tags</option>
+      <option value="B2B">B2B</option>
+      <option value="B2C">B2C</option>
+      <option value="Both">Both</option>
+      <option value="__none">Untagged</option>
+    </select>
+    <select id="filter-prio" title="Filter by priority">
+      <option value="">All priorities</option>
+      <option value="High">High</option>
+      <option value="Med">Medium</option>
+      <option value="Low">Low</option>
+      <option value="__none">No priority</option>
+    </select>
+    <select id="filter-status" title="Filter by status">
+      <option value="">All status</option>
+      <option value="answered">Answered</option>
+      <option value="unanswered">Not yet answered</option>
+      <option value="flagged">Flagged follow-up</option>
+    </select>
+    <span class="progress" id="progress">0 / 0 answered</span>
+    <button class="btn" id="btn-export">Export</button>
+    <button class="btn" id="btn-pdf" title="Save the page as a PDF">PDF</button>
+    <button class="btn danger" id="btn-reset" title="Clear all answers">Reset</button>
+  </div>
+
+  <div class="summary-bar" id="summary-bar"></div>
+
+  <section class="quick" id="quick-capture">
+    <h3><span class="badge">Quick capture</span> Add an ad-hoc note</h3>
+    <div class="hint">For answers, quotes, or observations that don't map to a specific question. Saved notes appear below.</div>
+    <input id="quick-title" class="quick-title" type="text" placeholder="Title (optional) — e.g. CFO mentioned £5M lost in regional inbox" />
+    <textarea id="quick-body" class="quick-body" placeholder="Type the answer or observation… ⌘+Enter to save"></textarea>
+    <div class="row">
+      <span class="control-label">Tag:</span>
+      <div class="seg tag" id="quick-tag">
+        <button data-val="B2B">B2B</button>
+        <button data-val="B2C">B2C</button>
+        <button data-val="Both">Both</button>
+      </div>
+      <span class="control-label">Priority:</span>
+      <div class="seg prio" id="quick-prio">
+        <button data-val="High">High</button>
+        <button data-val="Med">Med</button>
+        <button data-val="Low">Low</button>
+      </div>
+      <span class="flag-row">
+        <label><input type="checkbox" id="quick-flag" /> Follow up</label>
+      </span>
+      <button class="btn primary save" id="quick-save">Save note</button>
+    </div>
+    <div class="qn-list" id="qn-list"></div>
+  </section>
+
+  <div id="questions"></div>
+
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <header>
+      <h3 id="modal-title">Export</h3>
+      <button class="btn" id="modal-close">Close</button>
+    </header>
+    <main>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px">
+        <button class="btn primary" data-fmt="md">Markdown</button>
+        <button class="btn" data-fmt="json">JSON</button>
+        <button class="btn" data-fmt="csv">CSV</button>
+        <button class="btn" id="copy-out">Copy</button>
+        <button class="btn" id="download-out">Download</button>
+      </div>
+      <pre id="export-out"></pre>
+    </main>
+  </div>
+</div>
+
+<script>
+/* -------- Data: questions copied from the discovery doc -------- */
+const ROLES = [
+  { key: "All", label: "Group Opener", goal: "Align all three stakeholders before diving in." },
+  { key: "CMO", label: "Head of Marketing (CMO)", goal: "Prove ROI, campaign attribution, B2C readiness." },
+  { key: "CXO", label: "Head of Service / CX (CXO)", goal: "No inquiry ever lost, SLA control, inquiry ownership across channels." },
+  { key: "IT",  label: "Head of IT", goal: "Secure integration, data governance, technical feasibility." }
+];
+
+const QUESTIONS = [
+  {
+    id: "opener", role: "All", tag: "Golden Opener",
+    title: "Group alignment — what does each need to see in a demo?",
+    quote: "Each of you has a different lens on this problem — revenue growth, service quality, and technical integration. If we only have 45 minutes for a demo, what does each of you need to see to consider it a success?",
+    why: "Sets the agenda for the whole call. Every later answer can be tied back to this."
+  },
+
+  { id: "q1", role: "CMO", tag: "Q1 · Validate B2C Growth Pains",
+    title: "B2C growth pains & biggest concern",
+    quote: "As you plan the B2C launch to help double revenue, what is your biggest concern about capturing and converting that new volume of consumer inquiries, which are often less patient than B2B buyers?",
+    why: "Connects operational problems to the $1.2B 2030 revenue goal. Surfaces infrastructure anxiety before B2C volumes hit.",
+    branches: [
+      "“Our systems will be overwhelmed” → Which part breaks first: website forms, Telebu call centre, or dealer handoffs? Demo: Service Cloud omnichannel queue.",
+      "“We’ll damage our brand” → What is an acceptable first-response time? Demo: Service Cloud SLA timers and automated escalations."
+    ]
+  },
+  { id: "q2", role: "CMO", tag: "Q2 · Quantify Lead Leakage",
+    title: "Quantify lead leakage (Bruntwood reference)",
+    quote: "The Bruntwood case study showed they recovered £5.18M from previously untouched leads. How do you currently quantify the revenue impact of leads that are lost in unmonitored channels like regional inboxes or dealer handoffs?",
+    why: "Forces them to confront the financial cost of inaction. Likely answer (“we can’t”) sets up Data Cloud + Marketing Cloud attribution.",
+    branches: [
+      "“We can’t, it’s a guess” → Single Source of Truth. Demo: Data Cloud + Marketing Cloud dashboards.",
+      "“We use spreadsheets” → Quantify hours and error risk. Demo: Marketing Cloud automated reporting.",
+      "“Our agency gives us a report” → Ask how agency data reconciles with sales outcomes. Propose Salesforce ownership."
+    ]
+  },
+  { id: "q3", role: "CMO", tag: "Q3 · Connect Campaigns to Revenue",
+    title: "How do you connect campaigns to pipeline?",
+    quote: "When your team runs a successful campaign, how do you prove its contribution to the pipeline when the leads flow through so many fragmented systems before they are actioned?",
+    why: "Targets the CMO’s need to justify budget to the board. Points to the black hole where leads die between marketing and sales."
+  },
+  { id: "q4", role: "CMO", tag: "Q4 · Demo-Shaping: Attribution Vision",
+    title: "Attribution vision — what would a single dashboard change?",
+    quote: "If we could show you, in a single dashboard, every lead from every channel mapped to its campaign source and final outcome — what would that change about how you report to leadership today?",
+    why: "Confirms whether Marketing Cloud attribution and dashboards are the right anchor for the demo story."
+  },
+  { id: "q5", role: "CMO", tag: "Q5 · Demo-Shaping: Channel Focus",
+    title: "Which channel loses the most leads?",
+    quote: "Are there specific channels — WhatsApp, web forms, events — where you feel the most leads disappear? Which one would you most want us to focus on in a demo?",
+    why: "Lets them self-select the most relevant demo scenario. Leads naturally to the thin-slice WhatsApp → pipeline journey."
+  },
+
+  { id: "q6", role: "CXO", tag: "Q6 · Cross-Channel Blind Spots",
+    title: "WhatsApp + Telebu — how do you connect the dots today?",
+    quote: "Your goal is ‘no inquiry ever lost.’ If a VIP customer complains on WhatsApp and then calls the Telebu hotline an hour later, how does your team connect those two interactions today to see the full picture?",
+    why: "Directly exposes the omnichannel visibility gap. If they can’t answer it, that IS the demo."
+  },
+  { id: "q7", role: "CXO", tag: "Q7 · Define SLA Success",
+    title: "Most critical SLA for an MVP dashboard",
+    quote: "You’ve identified a need for SLA-based follow-up. If we were to establish an MVP, what is the single most critical SLA — like first response time — that you would want to see on a live dashboard in the first 30 days?",
+    why: "Gets them to define success in measurable terms — and builds the demo scorecard for them."
+  },
+  { id: "q8", role: "CXO", tag: "Q8 · Voice of the Customer Gaps",
+    title: "How do you act on scattered VoC feedback?",
+    quote: "With customer feedback scattered across Microsoft Forms and SurveyMonkey, how do you currently identify and act on recurring service issues that might be damaging the brand across the MEA region?",
+    why: "Highlights the cost of fragmented feedback. Opens the door to Service Cloud and Einstein analytics for VoC trending."
+  },
+  { id: "q9", role: "CXO", tag: "Q9 · Dealer & Partner Escalations",
+    title: "Dealer / partner escalation ownership & tracking",
+    quote: "Walk me through what happens right now when a dealer or distributor escalates a service complaint — who owns it, and how do you track resolution?",
+    why: "Surfaces the partner service gap. Opens the conversation for Agentforce + Experience Cloud for partner portals."
+  },
+  { id: "q10", role: "CXO", tag: "Q10 · The Golden Question",
+    title: "Define demo success in 30 mins",
+    quote: "If you had to define ‘success’ for a Salesforce demo in 30 minutes — what would you need to see to walk out believing this can work for MEA?",
+    why: "They literally tell you what to demo. Highest-value question of the call."
+  },
+  { id: "q11", role: "CXO", tag: "Q11 · Make It Real",
+    title: "Use a real service failure as the demo scenario",
+    quote: "Is there a specific service failure or customer complaint from the last 90 days that you wish had been handled differently? Can we use that as the scenario for the demo?",
+    why: "Makes the demo personal and concrete. A scenario rooted in their reality is far more persuasive than a generic Salesforce story."
+  },
+
+  { id: "q12", role: "IT", tag: "Q12 · Architectural Constraints",
+    title: "Architectural differences: US vs MEA",
+    quote: "The team references the Daikin USA unified model. From your perspective, what are the biggest architectural differences between the US and MEA — like the use of Telebu or regional portals — that we must solve for to ensure success here?",
+    why: "Shows you’ve done your homework on the US model and respects that MEA has a different reality."
+  },
+  { id: "q13", role: "IT", tag: "Q13 · Data Governance Rules",
+    title: "Data governance: identity resolution & data residency",
+    quote: "To create a single source of truth, we’ll need to unify data from the existing Sales Cloud org, CEC, and potentially your ERP. What are your non-negotiable governance requirements for identity resolution and data residency?",
+    why: "Surfaces blockers early. Data residency is often a dealbreaker in MEA — better to know now."
+  },
+  { id: "q14", role: "IT", tag: "Q14 · Partner Ecosystem Security",
+    title: "Partner ecosystem security model",
+    quote: "Given the reliance on a complex partner network, how do you envision securely providing dealers with access to leads and service data without giving them full access to the core CRM system?",
+    why: "Opens the conversation for Experience Cloud / PRM and Salesforce Shield. Shows you understand their B2B2C model."
+  },
+  { id: "q15", role: "IT", tag: "Q15 · Existing Salesforce Footprint",
+    title: "Existing Salesforce licenses or integrations in MEA?",
+    quote: "Beyond the Daikin USA model, are there any existing Salesforce licenses or integrations already in place in MEA that we should build on rather than replace?",
+    why: "Avoids stepping on existing investments and builds credibility with IT from the start."
+  },
+  { id: "q16", role: "IT", tag: "Q16 · Change Management & Deployment",
+    title: "Change management & deployment governance",
+    quote: "What does your current test and change management process look like — and how would a new platform need to fit into your deployment governance?",
+    why: "Surfaces adoption and rollout risk early. IT leaders often block deals on governance concerns, not technical ones."
+  },
+  { id: "q17", role: "IT", tag: "Q17 · Technical Demo Success Criteria",
+    title: "Technical PoC success criteria",
+    quote: "When you think about a successful proof-of-concept, what technical question is the most important one for us to answer — integration, security, or performance?",
+    why: "IT-specific version of the golden question. Lets them define what the PoC needs to prove."
+  }
+];
+
+/* -------- Persistence -------- */
+const STORAGE_KEY = "daikin-mea-discovery-v1";
+const defaultState = () => ({
+  meta: { date: new Date().toISOString().slice(0,10), attendees: "", our_team: "", next: "" },
+  answers: {},    // id -> { notes, tag, prio, flag }
+  notes: []       // ad-hoc notes: [{ id, title, body, tag, prio, flag, ts }]
+});
+let state = load();
+
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if (!s) return defaultState();
+    s.meta = Object.assign(defaultState().meta, s.meta || {});
+    s.answers = s.answers || {};
+    s.notes = Array.isArray(s.notes) ? s.notes : [];
+    return s;
+  } catch (_) { return defaultState(); }
+}
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+function getAns(id) {
+  if (!state.answers[id]) state.answers[id] = { notes: "", tag: "", prio: "", flag: false };
+  return state.answers[id];
+}
+
+/* -------- Render -------- */
+const qContainer = document.getElementById("questions");
+
+function render() {
+  qContainer.innerHTML = "";
+  ROLES.forEach(role => {
+    const qs = QUESTIONS.filter(q => q.role === role.key);
+    if (!qs.length) return;
+    const sec = document.createElement("section");
+    sec.className = "role-section role-" + role.key.toLowerCase();
+    sec.dataset.role = role.key;
+    sec.innerHTML = `
+      <div class="role-head">
+        <span class="pill">${role.key}</span>
+        <div>
+          <h2>${role.label}</h2>
+          <div class="goal">${role.goal}</div>
+        </div>
+      </div>
+    `;
+    qs.forEach(q => sec.appendChild(renderQ(q)));
+    qContainer.appendChild(sec);
+  });
+  updateProgress();
+  applyFilters();
+}
+
+function renderQ(q) {
+  const a = getAns(q.id);
+  const el = document.createElement("div");
+  el.className = "q";
+  el.dataset.id = q.id;
+  el.dataset.role = q.role;
+
+  const branchesHtml = q.branches ? `
+    <details class="branches">
+      <summary>If they say… (response branches)</summary>
+      <ul>${q.branches.map(b => `<li>${escapeHtml(b)}</li>`).join("")}</ul>
+    </details>` : "";
+
+  el.innerHTML = `
+    <div class="q-head">
+      <span class="q-tag">${escapeHtml(q.tag)}</span>
+      <div class="q-title">${escapeHtml(q.title)}</div>
+    </div>
+    <div class="q-quote">${escapeHtml(q.quote)}</div>
+    <div class="q-why"><b>Why ask:</b> ${escapeHtml(q.why)}</div>
+    ${branchesHtml}
+    <div class="controls">
+      <span class="control-label">Tag:</span>
+      <div class="seg tag" data-field="tag">
+        <button data-val="B2B">B2B</button>
+        <button data-val="B2C">B2C</button>
+        <button data-val="Both">Both</button>
+      </div>
+      <span class="control-label">Priority:</span>
+      <div class="seg prio" data-field="prio">
+        <button data-val="High">High</button>
+        <button data-val="Med">Med</button>
+        <button data-val="Low">Low</button>
+      </div>
+      <span class="flag-row">
+        <label><input type="checkbox" class="flag" /> Follow up</label>
+      </span>
+      <span class="saved-indicator">Saved ✓</span>
+    </div>
+    <textarea class="notes" placeholder="Capture their answer…"></textarea>
+  `;
+
+  // wire up
+  const notes = el.querySelector("textarea.notes");
+  notes.value = a.notes || "";
+  notes.addEventListener("input", () => {
+    a.notes = notes.value;
+    save();
+    flashSaved(el);
+    updateProgress();
+    applyFilters();
+  });
+
+  el.querySelectorAll(".seg").forEach(seg => {
+    const field = seg.dataset.field;
+    seg.querySelectorAll("button").forEach(btn => {
+      if (a[field] === btn.dataset.val) btn.classList.add("on");
+      btn.addEventListener("click", () => {
+        const val = btn.dataset.val;
+        a[field] = (a[field] === val) ? "" : val;
+        seg.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.val === a[field]));
+        save();
+        flashSaved(el);
+        updateProgress();
+        applyFilters();
+        renderSummary();
+      });
+    });
+  });
+
+  const flag = el.querySelector(".flag");
+  flag.checked = !!a.flag;
+  el.classList.toggle("flagged", !!a.flag);
+  flag.addEventListener("change", () => {
+    a.flag = flag.checked;
+    el.classList.toggle("flagged", a.flag);
+    save();
+    flashSaved(el);
+    applyFilters();
+    renderSummary();
+  });
+
+  return el;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+let savedTimer;
+function flashSaved(el) {
+  const tag = el.querySelector(".saved-indicator");
+  if (!tag) return;
+  tag.classList.add("show");
+  clearTimeout(tag._t);
+  tag._t = setTimeout(() => tag.classList.remove("show"), 700);
+}
+
+/* -------- Filters / search -------- */
+const $search = document.getElementById("search");
+const $fr = document.getElementById("filter-role");
+const $ft = document.getElementById("filter-tag");
+const $fp = document.getElementById("filter-prio");
+const $fs = document.getElementById("filter-status");
+
+[$search, $fr, $ft, $fp, $fs].forEach(el => el.addEventListener("input", applyFilters));
+
+function applyFilters() {
+  const term = ($search.value || "").trim().toLowerCase();
+  const fr = $fr.value, ft = $ft.value, fp = $fp.value, fs = $fs.value;
+
+  document.querySelectorAll(".role-section").forEach(sec => {
+    let visibleCount = 0;
+    sec.querySelectorAll(".q").forEach(qEl => {
+      const q = QUESTIONS.find(x => x.id === qEl.dataset.id);
+      const a = getAns(q.id);
+      let show = true;
+
+      if (fr && q.role !== fr) show = false;
+      if (ft) {
+        if (ft === "__none") { if (a.tag) show = false; }
+        else if (a.tag !== ft) show = false;
+      }
+      if (fp) {
+        if (fp === "__none") { if (a.prio) show = false; }
+        else if (a.prio !== fp) show = false;
+      }
+      if (fs === "answered" && !(a.notes || "").trim()) show = false;
+      if (fs === "unanswered" && (a.notes || "").trim()) show = false;
+      if (fs === "flagged" && !a.flag) show = false;
+
+      if (term) {
+        const hay = (q.title + " " + q.quote + " " + q.why + " " + (a.notes || "")).toLowerCase();
+        if (!hay.includes(term)) show = false;
+      }
+
+      qEl.classList.toggle("hidden", !show);
+      if (show) visibleCount++;
+    });
+    sec.style.display = visibleCount ? "" : "none";
+  });
+
+  renderSummary();
+}
+
+/* -------- Summary + progress -------- */
+function updateProgress() {
+  const total = QUESTIONS.length;
+  const done = QUESTIONS.filter(q => (getAns(q.id).notes || "").trim().length > 0).length;
+  document.getElementById("progress").innerHTML = `<b>${done}</b> / ${total} answered`;
+}
+
+function renderSummary() {
+  const bar = document.getElementById("summary-bar");
+  const counts = { B2B: 0, B2C: 0, Both: 0, High: 0, Med: 0, Low: 0, flag: 0 };
+  const tally = (a) => {
+    if (a.tag && counts[a.tag] !== undefined) counts[a.tag]++;
+    if (a.prio && counts[a.prio] !== undefined) counts[a.prio]++;
+    if (a.flag) counts.flag++;
+  };
+  Object.values(state.answers).forEach(tally);
+  state.notes.forEach(tally);
+  bar.innerHTML = `
+    <span class="chip">B2B <b>${counts.B2B}</b></span>
+    <span class="chip">B2C <b>${counts.B2C}</b></span>
+    <span class="chip">Both <b>${counts.Both}</b></span>
+    <span class="chip">High <b>${counts.High}</b></span>
+    <span class="chip">Med <b>${counts.Med}</b></span>
+    <span class="chip">Low <b>${counts.Low}</b></span>
+    <span class="chip">Follow-up <b>${counts.flag}</b></span>
+    <span class="chip">Ad-hoc notes <b>${state.notes.length}</b></span>
+  `;
+}
+
+/* -------- Meta fields -------- */
+function wireMeta() {
+  const map = { "m-date": "date", "m-attendees": "attendees", "m-our-team": "our_team", "m-next": "next" };
+  Object.entries(map).forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    el.value = state.meta[key] || "";
+    el.addEventListener("input", () => { state.meta[key] = el.value; save(); });
+  });
+}
+
+/* -------- Export -------- */
+const modal = document.getElementById("modal");
+document.getElementById("btn-export").addEventListener("click", () => {
+  modal.classList.add("on");
+  renderExport("md");
+});
+document.getElementById("modal-close").addEventListener("click", () => modal.classList.remove("on"));
+modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("on"); });
+
+let currentFmt = "md";
+modal.querySelectorAll("[data-fmt]").forEach(b => {
+  b.addEventListener("click", () => renderExport(b.dataset.fmt));
+});
+
+function renderExport(fmt) {
+  currentFmt = fmt;
+  modal.querySelectorAll("[data-fmt]").forEach(b => b.classList.toggle("primary", b.dataset.fmt === fmt));
+  const out = document.getElementById("export-out");
+  if (fmt === "json") out.textContent = JSON.stringify(buildExport(), null, 2);
+  else if (fmt === "csv") out.textContent = toCSV();
+  else out.textContent = toMarkdown();
+}
+
+function buildExport() {
+  return {
+    account: "Daikin Middle East & Africa FZE",
+    meta: state.meta,
+    answers: QUESTIONS.map(q => {
+      const a = getAns(q.id);
+      return {
+        id: q.id, role: q.role, tag_label: q.tag, title: q.title,
+        notes: a.notes || "", tag: a.tag || "", priority: a.prio || "", follow_up: !!a.flag
+      };
+    }),
+    quick_notes: state.notes.map(n => ({
+      id: n.id, title: n.title || "", body: n.body, tag: n.tag || "",
+      priority: n.prio || "", follow_up: !!n.flag, timestamp: n.ts
+    }))
+  };
+}
+
+function toMarkdown() {
+  const data = buildExport();
+  const m = data.meta;
+  let md = `# Daikin MEA — Discovery Call Notes\n\n`;
+  md += `**Date:** ${m.date || "—"}  \n`;
+  md += `**Daikin attendees:** ${m.attendees || "—"}  \n`;
+  md += `**Our team:** ${m.our_team || "—"}  \n`;
+  md += `**Next step:** ${m.next || "—"}\n\n`;
+  ROLES.forEach(role => {
+    const items = data.answers.filter(a => a.role === role.key);
+    if (!items.length) return;
+    md += `## ${role.label}\n\n_${role.goal}_\n\n`;
+    items.forEach(a => {
+      const tags = [a.tag, a.priority, a.follow_up ? "FOLLOW-UP" : ""].filter(Boolean).join(" · ");
+      md += `### ${a.tag_label} — ${a.title}\n`;
+      if (tags) md += `**Tags:** ${tags}\n\n`;
+      md += `${(a.notes || "_(no answer captured)_").trim()}\n\n`;
+    });
+  });
+  if (data.quick_notes && data.quick_notes.length) {
+    md += `## Ad-hoc notes\n\n`;
+    data.quick_notes.forEach(n => {
+      const tags = [n.tag, n.priority, n.follow_up ? "FOLLOW-UP" : ""].filter(Boolean).join(" · ");
+      md += `### ${n.title || "Note"}\n`;
+      if (tags) md += `**Tags:** ${tags}\n\n`;
+      md += `${n.body}\n\n`;
+    });
+  }
+  const fu = data.answers.filter(a => a.follow_up);
+  const fuNotes = (data.quick_notes || []).filter(n => n.follow_up);
+  if (fu.length || fuNotes.length) {
+    md += `## 🚩 Follow-ups\n\n`;
+    fu.forEach(a => md += `- **${a.tag_label}** — ${a.title}\n`);
+    fuNotes.forEach(n => md += `- *Ad-hoc:* ${n.title || n.body.slice(0, 80)}\n`);
+  }
+  return md;
+}
+
+function toCSV() {
+  const rows = [["ID", "Role", "Question", "Tag (B2B/B2C)", "Priority", "Follow-up", "Notes"]];
+  QUESTIONS.forEach(q => {
+    const a = getAns(q.id);
+    rows.push([q.id, q.role, q.title, a.tag || "", a.prio || "", a.flag ? "yes" : "", (a.notes || "").replace(/\r?\n/g, " ")]);
+  });
+  state.notes.forEach(n => {
+    rows.push([n.id, "AD-HOC", n.title || "Note", n.tag || "", n.prio || "", n.flag ? "yes" : "", (n.body || "").replace(/\r?\n/g, " ")]);
+  });
+  return rows.map(r => r.map(csvCell).join(",")).join("\n");
+}
+function csvCell(v) {
+  v = String(v);
+  if (/[",\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
+  return v;
+}
+
+document.getElementById("copy-out").addEventListener("click", async () => {
+  const txt = document.getElementById("export-out").textContent;
+  try {
+    await navigator.clipboard.writeText(txt);
+    const b = document.getElementById("copy-out");
+    const old = b.textContent; b.textContent = "Copied ✓";
+    setTimeout(() => b.textContent = old, 1200);
+  } catch (_) {}
+});
+document.getElementById("download-out").addEventListener("click", () => {
+  const txt = document.getElementById("export-out").textContent;
+  const ext = currentFmt === "json" ? "json" : currentFmt === "csv" ? "csv" : "md";
+  const mime = currentFmt === "json" ? "application/json" : currentFmt === "csv" ? "text/csv" : "text/markdown";
+  const name = `daikin-mea-discovery-${(state.meta.date || "").replace(/\D/g,"")}.${ext}`;
+  const blob = new Blob([txt], { type: mime });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 500);
+});
+
+/* -------- Reset -------- */
+document.getElementById("btn-reset").addEventListener("click", () => {
+  if (!confirm("Clear all notes, tags, priorities and meta fields? This cannot be undone.")) return;
+  state = defaultState();
+  save();
+  // refresh meta inputs and re-render
+  document.getElementById("m-date").value = state.meta.date;
+  document.getElementById("m-attendees").value = "";
+  document.getElementById("m-our-team").value = "";
+  document.getElementById("m-next").value = "";
+  render();
+  renderQuickList();
+  renderSummary();
+  resetQuickInputs();
+});
+
+/* -------- Quick Capture -------- */
+const $qTitle = document.getElementById("quick-title");
+const $qBody  = document.getElementById("quick-body");
+const $qFlag  = document.getElementById("quick-flag");
+const $qSave  = document.getElementById("quick-save");
+const $qList  = document.getElementById("qn-list");
+const quickDraft = { tag: "", prio: "" };
+
+function wireQuickSegs() {
+  ["quick-tag", "quick-prio"].forEach(segId => {
+    const seg = document.getElementById(segId);
+    const field = segId === "quick-tag" ? "tag" : "prio";
+    seg.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const v = btn.dataset.val;
+        quickDraft[field] = (quickDraft[field] === v) ? "" : v;
+        seg.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.val === quickDraft[field]));
+      });
+    });
+  });
+}
+
+function resetQuickInputs() {
+  $qTitle.value = "";
+  $qBody.value = "";
+  $qFlag.checked = false;
+  quickDraft.tag = "";
+  quickDraft.prio = "";
+  document.querySelectorAll("#quick-tag button, #quick-prio button").forEach(b => b.classList.remove("on"));
+  $qBody.focus();
+}
+
+function saveQuickNote() {
+  const body = $qBody.value.trim();
+  if (!body) { $qBody.focus(); return; }
+  const note = {
+    id: "n_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+    title: $qTitle.value.trim(),
+    body: body,
+    tag: quickDraft.tag || "",
+    prio: quickDraft.prio || "",
+    flag: $qFlag.checked,
+    ts: new Date().toISOString()
+  };
+  state.notes.unshift(note); // newest first
+  save();
+  renderQuickList();
+  renderSummary();
+  resetQuickInputs();
+}
+
+function renderQuickList() {
+  $qList.innerHTML = "";
+  state.notes.forEach(n => $qList.appendChild(renderQN(n)));
+}
+
+function renderQN(n) {
+  const el = document.createElement("div");
+  el.className = "qn" + (n.flag ? " flagged" : "");
+  const ts = new Date(n.ts);
+  const tsStr = isNaN(ts) ? "" : ts.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  const tags = [];
+  if (n.tag) tags.push(`<span class="pb pb-${n.tag.toLowerCase()}">${escapeHtml(n.tag)}</span>`);
+  if (n.prio) tags.push(`<span class="pb pb-${n.prio.toLowerCase()}">${escapeHtml(n.prio)}</span>`);
+  if (n.flag) tags.push(`<span class="pb pb-flag">🚩 Follow up</span>`);
+
+  el.innerHTML = `
+    <div class="qn-head">
+      <span class="qn-title">${escapeHtml(n.title || "Note")}</span>
+      <span class="qn-tags">${tags.join("")}</span>
+      <span class="qn-time">${escapeHtml(tsStr)}</span>
+      <button class="qn-del" title="Delete">×</button>
+    </div>
+    <div class="qn-body">${escapeHtml(n.body)}</div>
+  `;
+  el.querySelector(".qn-del").addEventListener("click", () => {
+    if (!confirm("Delete this note?")) return;
+    state.notes = state.notes.filter(x => x.id !== n.id);
+    save();
+    renderQuickList();
+    renderSummary();
+  });
+  return el;
+}
+
+$qSave.addEventListener("click", saveQuickNote);
+$qBody.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); saveQuickNote(); }
+});
+
+/* -------- PDF (print-to-PDF) -------- */
+document.getElementById("btn-pdf").addEventListener("click", () => {
+  preparePrint();
+  // tiny delay so the DOM updates before the print dialog opens
+  setTimeout(() => {
+    window.print();
+  }, 50);
+});
+
+// Make the browser's own Print shortcut (Cmd/Ctrl+P) prep the same view.
+window.addEventListener("beforeprint", preparePrint);
+window.addEventListener("afterprint", cleanupPrint);
+
+function preparePrint() {
+  document.body.classList.add("printing");
+
+  // Inject a print header with meta info just under <header>.
+  const header = document.querySelector("header");
+  let meta = document.getElementById("print-meta");
+  if (!meta) {
+    meta = document.createElement("div");
+    meta.id = "print-meta";
+    meta.className = "print-only print-meta";
+    header.insertAdjacentElement("afterend", meta);
+  }
+  const m = state.meta;
+  const counts = computeCounts();
+  meta.innerHTML = `
+    <div><b>Date</b> ${escapeHtml(m.date || "—")}</div>
+    <div><b>Daikin attendees</b> ${escapeHtml(m.attendees || "—")}</div>
+    <div><b>Our team</b> ${escapeHtml(m.our_team || "—")}</div>
+    <div><b>Next step / owner</b> ${escapeHtml(m.next || "—")}</div>
+    <div style="margin-top:4px"><b>Answered</b> ${counts.answered} / ${QUESTIONS.length}
+       &nbsp;·&nbsp; <b>B2B</b> ${counts.B2B}
+       &nbsp;·&nbsp; <b>B2C</b> ${counts.B2C}
+       &nbsp;·&nbsp; <b>Both</b> ${counts.Both}
+       &nbsp;·&nbsp; <b>High</b> ${counts.High}
+       &nbsp;·&nbsp; <b>Follow-up</b> ${counts.flag}</div>
+  `;
+
+  // For each question, inject static badges + a notes block to replace the textarea.
+  document.querySelectorAll(".q").forEach(qEl => {
+    const a = getAns(qEl.dataset.id);
+    qEl.classList.toggle("flagged", !!a.flag);
+
+    let badges = qEl.querySelector(".print-badges");
+    if (!badges) {
+      badges = document.createElement("div");
+      badges.className = "print-badges print-only";
+      qEl.querySelector(".controls").after(badges);
+    }
+    const tagCls = a.tag ? `pb pb-${a.tag.toLowerCase()}` : "pb pb-empty";
+    const prioCls = a.prio ? `pb pb-${a.prio.toLowerCase()}` : "pb pb-empty";
+    badges.innerHTML = `
+      <span class="${tagCls}">Tag: ${a.tag || "—"}</span>
+      <span class="${prioCls}">Priority: ${a.prio || "—"}</span>
+      ${a.flag ? '<span class="pb" style="border-color:#b91c1c;color:#b91c1c">🚩 Follow up</span>' : ""}
+    `;
+
+    let notes = qEl.querySelector(".print-notes");
+    if (!notes) {
+      notes = document.createElement("div");
+      notes.className = "print-notes print-only";
+      qEl.appendChild(notes);
+    }
+    notes.textContent = a.notes || "";
+  });
+}
+
+function cleanupPrint() {
+  document.body.classList.remove("printing");
+  // Leave the injected nodes — CSS hides them outside .printing — so subsequent prints are instant.
+}
+
+function computeCounts() {
+  const c = { answered: 0, B2B: 0, B2C: 0, Both: 0, High: 0, Med: 0, Low: 0, flag: 0 };
+  QUESTIONS.forEach(q => {
+    const a = getAns(q.id);
+    if ((a.notes || "").trim()) c.answered++;
+    if (a.tag && c[a.tag] !== undefined) c[a.tag]++;
+    if (a.prio && c[a.prio] !== undefined) c[a.prio]++;
+    if (a.flag) c.flag++;
+  });
+  return c;
+}
+
+/* -------- Boot -------- */
+wireMeta();
+wireQuickSegs();
+render();
+renderQuickList();
+renderSummary();
+</script>
+
+</body>
+</html>
